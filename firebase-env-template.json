@@ -1,0 +1,25 @@
+{
+  "comment": "This is a template file showing the Firebase environment variables structure.",
+  "comment2": "Copy these values from Firebase Console → Project Settings → Your apps → Web app",
+  "comment3": "Add these variables in Vercel Dashboard → Settings → Environment Variables",
+  "variables": {
+    "NEXT_PUBLIC_FIREBASE_API_KEY": "AIza... (your Firebase API key)",
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "your-project-id.firebaseapp.com",
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "your-project-id",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "your-project-id.appspot.com",
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "123456789 (numeric ID)",
+    "NEXT_PUBLIC_FIREBASE_APP_ID": "1:123456789:web:abc123def456"
+  },
+  "instructions": {
+    "step1": "Go to Firebase Console: https://console.firebase.google.com/",
+    "step2": "Select your project",
+    "step3": "Click Settings (gear icon) → Project settings",
+    "step4": "Scroll to 'Your apps' section",
+    "step5": "Click on your Web app (or create one)",
+    "step6": "Copy the values from the firebaseConfig object",
+    "step7": "Add each variable in Vercel Dashboard → Settings → Environment Variables",
+    "step8": "Select all environments (Production, Preview, Development)",
+    "step9": "Redeploy your project"
+  }
+}
+

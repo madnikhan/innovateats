@@ -58,6 +58,8 @@ A comprehensive employee login and management system for Innovat Eats restaurant
      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
      NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
      ```
+   
+   **For Vercel Deployment**: See [`FIREBASE_VERCEL_SETUP.md`](./FIREBASE_VERCEL_SETUP.md) for detailed instructions on configuring Firebase environment variables in Vercel.
 
 5. **Set up Firestore Security Rules** (in Firebase Console):
    ```javascript

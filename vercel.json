@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "comment": "Add Firebase environment variables in Vercel Dashboard → Settings → Environment Variables"
+  }
+}
+
