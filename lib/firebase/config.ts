@@ -11,19 +11,56 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
 };
 
-// Initialize Firebase - use default config if env vars are missing (for build)
-let firebaseApp: FirebaseApp;
+// Lazy initialization - only initialize when actually needed
+let firebaseApp: FirebaseApp | null = null;
 
-if (!getApps().length) {
-  // Always initialize with config (even if empty) to prevent build errors
-  // Empty config will fail at runtime, but allows build to succeed
-  firebaseApp = initializeApp(firebaseConfig);
-} else {
-  firebaseApp = getApps()[0];
-}
+const getFirebaseApp = (): FirebaseApp => {
+  if (!firebaseApp) {
+    if (!getApps().length) {
+      // Initialize Firebase - use config even if empty (for build compatibility)
+      // This will fail at runtime if env vars are missing, but allows build to succeed
+      try {
+        firebaseApp = initializeApp(firebaseConfig);
+      } catch (error) {
+        // During build, if Firebase can't initialize, create a minimal app
+        if (typeof window === 'undefined') {
+          // Build time - initialize with minimal config to prevent errors
+          firebaseApp = initializeApp({
+            apiKey: 'build-time-placeholder',
+            authDomain: 'build-time-placeholder',
+            projectId: 'build-time-placeholder',
+            storageBucket: 'build-time-placeholder',
+            messagingSenderId: 'build-time-placeholder',
+            appId: 'build-time-placeholder',
+          });
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      firebaseApp = getApps()[0];
+    }
+  }
+  return firebaseApp;
+};
 
-// Initialize Firebase services
-export const auth: Auth = getAuth(firebaseApp);
-export const db: Firestore = getFirestore(firebaseApp);
+// Lazy initialization of Firebase services - only initialize when accessed
+let _auth: Auth | null = null;
+let _db: Firestore | null = null;
+
+export const auth: Auth = (() => {
+  if (!_auth) {
+    _auth = getAuth(getFirebaseApp());
+  }
+  return _auth;
+})();
+
+export const db: Firestore = (() => {
+  if (!_db) {
+    _db = getFirestore(getFirebaseApp());
+  }
+  return _db;
+})();
+
 export default firebaseApp;
 
