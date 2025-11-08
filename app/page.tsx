@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeScanType } from 'html5-qrcode';
 import { getEmployeeByQRCode } from '@/lib/firebase/employees';
 import { checkInEmployee, checkOutEmployee, isEmployeeCheckedIn } from '@/lib/firebase/attendance';
 import { Employee } from '@/types/employee';
@@ -69,6 +69,37 @@ function HomeContent() {
     }
   };
 
+  const requestCameraPermission = async (): Promise<boolean> => {
+    try {
+      // Check if Permissions API is available
+      if (navigator.permissions && navigator.permissions.query) {
+        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        if (permissionStatus.state === 'granted') {
+          return true;
+        }
+        if (permissionStatus.state === 'denied') {
+          return false;
+        }
+      }
+
+      // Try to get user media to trigger permission request
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch (err: any) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          return false;
+        }
+        // For other errors, try to proceed anyway
+        return true;
+      }
+    } catch (err) {
+      // If Permissions API is not available, try to proceed
+      return true;
+    }
+  };
+
   const initializeScanner = async () => {
     try {
       const element = document.getElementById(scannerElementId);
@@ -80,41 +111,107 @@ function HomeContent() {
 
       await stopScanner();
 
+      // Request camera permission explicitly (important for Android PWAs)
+      const hasPermission = await requestCameraPermission();
+      if (!hasPermission) {
+        setError('Camera permission is required. Please allow camera access in your browser settings.');
+        setStatus('error');
+        return;
+      }
+
       const html5QrCode = new Html5Qrcode(scannerElementId);
       scannerRef.current = html5QrCode;
 
-      const devices = await Html5Qrcode.getCameras();
-      if (devices && devices.length > 0) {
-        const cameraId = devices[0].id;
-        const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-          videoConstraints: {
-            facingMode: 'environment'
-          }
-        };
+      // Get available cameras with better error handling
+      let devices: Array<{ id: string; label?: string }> = [];
+      try {
+        devices = await Html5Qrcode.getCameras();
+      } catch (err: any) {
+        // If getCameras fails, try to start with default camera
+        console.warn('Could not enumerate cameras, trying default camera:', err);
+        devices = [];
+      }
 
-        await html5QrCode.start(
-          cameraId,
-          config,
-          onScanSuccess,
-          onScanError
+      let cameraId: string | null = null;
+      
+      if (devices && devices.length > 0) {
+        // Prefer back camera (environment) on mobile
+        const backCamera = devices.find((device) => 
+          device.label?.toLowerCase().includes('back') || 
+          device.label?.toLowerCase().includes('rear') ||
+          device.label?.toLowerCase().includes('environment')
         );
+        cameraId = backCamera ? backCamera.id : devices[0].id;
+      }
+
+      // Configuration optimized for mobile/PWA
+      const config: any = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+      };
+
+      // Add video constraints for better mobile support
+      if (cameraId) {
+        config.videoConstraints = {
+          deviceId: { exact: cameraId },
+          facingMode: 'environment'
+        };
+      } else {
+        // Fallback: use facingMode without deviceId
+        config.videoConstraints = {
+          facingMode: 'environment'
+        };
+      }
+
+      // Try to start the scanner
+      try {
+        if (cameraId) {
+          await html5QrCode.start(
+            cameraId,
+            config,
+            onScanSuccess,
+            onScanError
+          );
+        } else {
+          // Fallback: try to start without specifying camera
+          await html5QrCode.start(
+            { facingMode: 'environment' },
+            config,
+            onScanSuccess,
+            onScanError
+          );
+        }
 
         setStatus('scanning');
         setError('');
-      } else {
-        throw new Error('No cameras found.');
+      } catch (startError: any) {
+        // If start fails with deviceId, try without it
+        if (cameraId && startError.message?.includes('device')) {
+          console.warn('Failed to start with specific camera, trying default:', startError);
+          await html5QrCode.start(
+            { facingMode: 'environment' },
+            config,
+            onScanSuccess,
+            onScanError
+          );
+          setStatus('scanning');
+          setError('');
+        } else {
+          throw startError;
+        }
       }
     } catch (err: any) {
       console.error('Error initializing scanner:', err);
-      if (err.name === 'NotAllowedError' || err.message?.includes('permission')) {
-        setError('Camera permission denied. Please allow camera access.');
-      } else if (err.name === 'NotFoundError' || err.message?.includes('No cameras')) {
-        setError('No camera found. Please ensure your device has a camera.');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' || err.message?.includes('permission')) {
+        setError('Camera permission denied. Please allow camera access in your browser settings and try again.');
+      } else if (err.name === 'NotFoundError' || err.message?.includes('No cameras') || err.message?.includes('couldn\'t start video source')) {
+        setError('Could not access camera. Please ensure your device has a camera and grant camera permissions.');
+      } else if (err.message?.includes('timeout')) {
+        setError('Camera initialization timed out. Please try again.');
       } else {
-        setError(err.message || 'Failed to initialize camera.');
+        setError(err.message || 'Failed to initialize camera. Please try refreshing the page.');
       }
       setStatus('error');
       await stopScanner();
@@ -232,7 +329,13 @@ function HomeContent() {
         <div className="bg-white rounded-2xl shadow-lg p-6">
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <p className="text-red-700 text-sm">{error}</p>
+              <p className="text-red-700 text-sm mb-3">{error}</p>
+              <button
+                onClick={initializeScanner}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Retry Camera
+              </button>
             </div>
           )}
 
