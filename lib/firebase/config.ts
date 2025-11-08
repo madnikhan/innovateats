@@ -11,27 +11,19 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
 };
 
-// Initialize Firebase only if we have valid config
-let firebaseApp: FirebaseApp | undefined;
+// Initialize Firebase - use default config if env vars are missing (for build)
+let firebaseApp: FirebaseApp;
 
-if (firebaseConfig.apiKey && firebaseConfig.projectId) {
-  try {
-    firebaseApp = !getApps().length 
-      ? initializeApp(firebaseConfig)
-      : getApps()[0];
-  } catch (error) {
-    // During build, if Firebase can't initialize, we'll handle it gracefully
-    if (typeof window === 'undefined') {
-      // Build time - create a mock app to prevent errors
-      console.warn('Firebase config missing during build - this is expected if env vars are not set');
-    } else {
-      throw error;
-    }
-  }
+if (!getApps().length) {
+  // Always initialize with config (even if empty) to prevent build errors
+  // Empty config will fail at runtime, but allows build to succeed
+  firebaseApp = initializeApp(firebaseConfig);
+} else {
+  firebaseApp = getApps()[0];
 }
 
-// Initialize Firebase services - will fail gracefully if app is not initialized
-export const auth: Auth = firebaseApp ? getAuth(firebaseApp) : getAuth();
-export const db: Firestore = firebaseApp ? getFirestore(firebaseApp) : getFirestore();
+// Initialize Firebase services
+export const auth: Auth = getAuth(firebaseApp);
+export const db: Firestore = getFirestore(firebaseApp);
 export default firebaseApp;
 
