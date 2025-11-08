@@ -80,9 +80,18 @@ fi
 # Make gradlew executable
 chmod +x ./gradlew
 
+# Set Java home to Java 17 if available (macOS)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    JAVA_17_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null)
+    if [ -n "$JAVA_17_HOME" ]; then
+        export JAVA_HOME="$JAVA_17_HOME"
+        echo -e "${BLUE}Using Java 17: $JAVA_HOME${NC}"
+    fi
+fi
+
 # Build release APK
 echo -e "${BLUE}Building release APK...${NC}"
-./gradlew assembleRelease
+./gradlew assembleRelease -Dorg.gradle.java.home="${JAVA_HOME:-}"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Release APK build failed!${NC}"
