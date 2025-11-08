@@ -72,7 +72,34 @@ npx cap sync
 
 ## Building the APK
 
-### Option 1: Using Android Studio (Recommended)
+### Option 1: Direct Command Line Build (Easiest) ⚡
+
+**Build Debug APK:**
+```bash
+npm run android:build
+```
+
+This will:
+1. Build your Next.js app
+2. Sync with Capacitor
+3. Build the Android APK using Gradle
+4. Show you the APK location
+
+**Build Release APK (for distribution):**
+```bash
+npm run android:build:release
+```
+
+**Note:** For release APK, you'll need a keystore first:
+```bash
+npm run android:keystore
+```
+
+The APK will be located at:
+- **Debug**: `android/app/build/outputs/apk/debug/app-debug.apk`
+- **Release**: `android/app/build/outputs/apk/release/app-release.apk`
+
+### Option 2: Using Android Studio
 
 1. **Open Android Studio**:
    ```bash
