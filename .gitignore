@@ -47,3 +47,15 @@ next-env.d.ts
 /android/local.properties
 *.jks
 *.keystore
+
+# iOS
+/ios/App/build/
+/ios/App/Pods/
+/ios/App/Podfile.lock
+/ios/App/*.xcworkspace/xcuserdata/
+/ios/App/*.xcodeproj/xcuserdata/
+/ios/App/*.xcodeproj/project.xcworkspace/xcuserdata/
+.DS_Store
+*.ipa
+*.dSYM.zip
+*.dSYM

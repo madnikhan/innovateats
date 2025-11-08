@@ -30,6 +30,12 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true
+  },
+  ios: {
+    contentInset: 'automatic',
+    scrollEnabled: true,
+    allowsLinkPreview: false,
+    handleKeyboardEvents: true
   }
 };
 
