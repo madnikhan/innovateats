@@ -29,6 +29,7 @@ function AdminDashboardContent() {
     totalHoursToday: 0,
     totalEarningsToday: 0,
     employeesByRole: {
+      owner: 0,
       admin: 0,
       manager: 0,
       server: 0,
