@@ -17,7 +17,8 @@
     "android:keystore": "bash scripts/create-keystore.sh",
     "ios:open": "npm run build && npx cap sync ios && npx cap open ios",
     "ios:build": "bash scripts/build-ios.sh",
-    "ios:build:cli": "bash scripts/build-ios-xcodebuild.sh"
+    "ios:build:cli": "bash scripts/build-ios-xcodebuild.sh",
+    "ios:build:device": "bash scripts/build-ios-device.sh"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",

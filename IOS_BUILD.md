@@ -68,7 +68,27 @@ cd ../..
 
 ## Building the iOS App
 
-### Option 1: Using Build Script (Recommended) ⚡
+### Option 1: Command Line Build (No Xcode GUI Required) ⚡
+
+**Build for iOS Simulator (no Xcode GUI needed):**
+```bash
+npm run ios:build:cli
+```
+
+This will:
+1. Build your Next.js app
+2. Sync with Capacitor
+3. Install CocoaPods dependencies
+4. Build using `xcodebuild` command line (Xcode must be installed but doesn't need to be open)
+
+**Build for Physical Device:**
+```bash
+npm run ios:build:device
+```
+
+**Note:** Device builds require code signing (Apple Developer account)
+
+### Option 2: Using Build Script (Opens Xcode)
 
 **Open Xcode and build:**
 ```bash
@@ -79,12 +99,7 @@ This will:
 1. Build your Next.js app
 2. Sync with Capacitor
 3. Install CocoaPods dependencies
-4. Open Xcode
-
-**Build from command line:**
-```bash
-npm run ios:build:cli
-```
+4. Open Xcode (you can then build from Xcode GUI)
 
 ### Option 2: Manual Build
 
